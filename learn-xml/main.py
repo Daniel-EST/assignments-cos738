@@ -1,5 +1,4 @@
 from typing import TextIO
-import os
 import xml.sax
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
