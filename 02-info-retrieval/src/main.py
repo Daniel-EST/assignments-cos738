@@ -1,9 +1,7 @@
-from typing import TextIO
 import logging
 import argparse
 import utils
 
-import os
 import configparser
 
 from parsers import query, inverted_list
@@ -15,7 +13,7 @@ logging.basicConfig(
 )
 
 
-def main(**kwargs):
+def main(**kwargs) -> None:
     config = configparser.ConfigParser()
     config.read(utils.get_config_path("pc.cfg"))
     input_path = config["DEFAULT"]["LEIA"]

@@ -24,7 +24,6 @@ print(stripped_text)  # Output: "Hello, World!"
 
 from typing import List, Tuple
 import unicodedata
-import string
 import re
 import csv
 
@@ -64,13 +63,16 @@ def strip_special_characters(s: str) -> str:
     # return s.translate(str.maketrans("", "", string.punctuation))
     return re.sub(r"[^a-zA-Z]+", " ", s)
 
+
 def get_stopwords():
     with open("./utils/stopwords.txt", "r", encoding="utf-8") as file:
         return file.read()
 
+
 def remove_stopwords(s: str) -> str:
     stopwords = get_stopwords()
-    s = " ".join(term if term.lower() not in stopwords else "" for term in s.split(" "))
+    s = " ".join(term if term.lower()
+                 not in stopwords else "" for term in s.split(" "))
     return s
 
 
