@@ -26,7 +26,8 @@ def main(**kwargs) -> None:
     output_path = config["DEFAULT"]["ESCREVA"]
     input_paths = input_paths.split(",")
     input_paths = list(
-        filter(lambda input_path: input_path.strip() != "", input_paths))
+        filter(lambda input_path: input_path.strip() != "", input_paths)
+    )
     inverted_list.parse(input_paths, output_path)
 
     # for key, value in kwargs.items():

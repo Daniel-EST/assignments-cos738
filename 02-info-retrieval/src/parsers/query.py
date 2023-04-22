@@ -20,7 +20,7 @@ def __read_raw_query_file(input_path: str) -> Tuple[List[Tuple]]:
                 "QueryText"
             )[0].firstChild.nodeValue
 
-            query_text = utils.noramlize_text(query_text)
+            query_text = utils.normalize_text(query_text, stopwords=False)
 
             queries.append((query_number, query_text))
 

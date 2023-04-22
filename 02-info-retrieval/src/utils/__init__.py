@@ -76,10 +76,11 @@ def remove_stopwords(s: str) -> str:
     return s
 
 
-def noramlize_text(s: str) -> str:
+def normalize_text(s: str, stopwords: bool = True) -> str:
     s = s.upper()
     s = strip_special_characters(s)
-    s = remove_stopwords(s)
+    if stopwords:
+        s = remove_stopwords(s)
     s = strip_accents(s)
     s = s.replace("\n", " ")
     s = re.sub(r" +", " ", s)

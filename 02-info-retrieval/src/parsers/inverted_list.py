@@ -32,7 +32,7 @@ def __read_raw_query_file(input_path: str, terms: Dict[str, List[int]]) -> Defau
                 abstract = extract[0].firstChild.nodeValue
 
             if abstract:
-                abstract = utils.noramlize_text(abstract)
+                abstract = utils.normalize_text(abstract, stopwords=True)
                 abstract = abstract.split(" ")
                 for term in abstract:
                     term = term.strip()
