@@ -4,7 +4,7 @@ import utils
 
 import configparser
 
-from parsers import query, inverted_list
+from parsers import query, inverted_list, indexer
 
 
 logging.basicConfig(
@@ -28,8 +28,18 @@ def main(**kwargs) -> None:
     input_paths = list(
         filter(lambda input_path: input_path.strip() != "", input_paths)
     )
-    inverted_list.parse(input_paths, output_path)
+    terms = inverted_list.parse(input_paths, output_path)
 
+    config.read(utils.get_config_path("index.cfg"))
+    input_paths = config["DEFAULT"]["LEIA"]
+    output_path = config["DEFAULT"]["ESCREVA"]
+    input_paths = input_paths.split(",")
+    input_paths = list(
+        filter(lambda input_path: input_path.strip() != "", input_paths)
+    )
+    max_term = indexer.docs_max_term_freq(input_paths)
+    indexer.write_model(terms, max_term, output_path)
+    
     # for key, value in kwargs.items():
     #     print("The value of {} is {}".format(key, value))
 

@@ -47,7 +47,7 @@ def __write_inverted_list_file(output_path: str, terms: List[Tuple]) -> None:
     utils.write_to_csv(output_path, fieldnames, terms)
 
 
-def parse(input_paths: List[str],  ouput_path: str) -> None:
+def parse(input_paths: List[str],  ouput_path: str) -> DefaultDict[str, List[int]]:
     """
     Parse an XML file containing queries and their expected results.
 
@@ -66,3 +66,4 @@ def parse(input_paths: List[str],  ouput_path: str) -> None:
     for input_path in input_paths:
         terms = __read_raw_query_file(input_path.strip(), terms)
     __write_inverted_list_file(ouput_path, terms)
+    return terms

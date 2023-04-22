@@ -60,7 +60,6 @@ def strip_accents(s: str) -> str:
 
 
 def strip_special_characters(s: str) -> str:
-    # return s.translate(str.maketrans("", "", string.punctuation))
     return re.sub(r"[^a-zA-Z]+", " ", s)
 
 
