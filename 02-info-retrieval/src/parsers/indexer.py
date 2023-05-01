@@ -30,7 +30,7 @@ def write_model(input_paths: List[str], output_path_inverted_list: str, output_p
     for term, doc_numbers in inverted_list.items():
         doc_num = set(doc_numbers)
         for doc in doc_num:
-            docs[term][doc] = (doc_numbers.count(doc) / max_freq_in_document[doc]) * \
+            docs[doc][term] = (doc_numbers.count(doc) / max_freq_in_document[doc]) * \
                 math.log(total_documents / len(doc_num))
 
     logging.info("INDEXER - Saving TF-IDF model file as %s", output_path_model)
