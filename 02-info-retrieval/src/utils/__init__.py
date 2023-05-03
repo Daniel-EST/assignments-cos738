@@ -124,7 +124,7 @@ def normalize_text(s: str, stopwords: bool = True) -> str:
     return s.strip()
 
 
-def write_to_csv(output_path: str, fieldnames: List[str], values: List[Tuple]) -> None:
+def write_to_csv(output_path: str, fieldnames: List[str], values: List[Tuple], mode: str = "w") -> None:
     """
     Write a list of tuples to a CSV file.
 
@@ -132,6 +132,7 @@ def write_to_csv(output_path: str, fieldnames: List[str], values: List[Tuple]) -
         output_path (str): The path to the output CSV file.
         fieldnames (List[str]): A list of strings containing the column names for the CSV file.
         values (List[Tuple]): A list of tuples containing the values to be written to the CSV file.
+        mode (str): Specifies the mode in which the file is opened. 
 
     Returns:
         None
@@ -144,7 +145,7 @@ def write_to_csv(output_path: str, fieldnames: List[str], values: List[Tuple]) -
 
     Note that this function overwrites any existing file at `output_path`.
     """
-    with open(output_path, "w", encoding="utf-8") as file:
+    with open(output_path, mode, encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=";", quotechar="\"")
         if fieldnames:
             writer.writerow(fieldnames)

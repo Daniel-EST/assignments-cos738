@@ -2,7 +2,7 @@ import argparse
 import configparser
 import logging
 
-from parsers import indexer, inverted_list, query
+from parsers import indexer, inverted_list, query, search
 
 logging.basicConfig(
     format="%(levelname)s: %(message)s",
@@ -67,12 +67,12 @@ def main(**kwargs) -> None:
 
     if kwargs["search"]:
         config.read(kwargs["config_busca"])
-        model_path = config["DEFAULT"]["MODELO"]
-        query_path = config["DEFAULT"]["CONSULTAS"]
+        queries_path = config["DEFAULT"]["CONSULTAS"]
         results_path = config["DEFAULT"]["RESULTADOS"]
-        print(query_path)
-        print(results_path)
-        print(model_path)
+        model_path = config["DEFAULT"]["MODELO"]
+        search.retrieve_documents(queries_path, results_path, model_path)
+
+    logging.info("End of program")
 
 
 if __name__ == "__main__":
