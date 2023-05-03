@@ -159,4 +159,6 @@ A organização das pastas e arquivos:
 - /data/raw: Contém os dados a serem processados na tarefa;
 - /src: Contém os códigos da tarefa;
 
+Rodar códigos dentro da pasta /src
+
 **Data de entrega:** 03/05/2023
