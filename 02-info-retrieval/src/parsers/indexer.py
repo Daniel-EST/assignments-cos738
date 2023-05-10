@@ -35,4 +35,4 @@ def write_model(input_paths: List[str], output_path_inverted_list: str, output_p
 
     logging.info("INDEXER - Saving TF-IDF model file as %s", output_path_model)
     with open(output_path_model, "w", encoding="utf-8") as file:
-        json.dump(docs, file)
+        json.dump(docs, file, sort_keys=True, indent=2)

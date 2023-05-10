@@ -52,7 +52,7 @@ def __read_raw_query_file(input_path: str) -> Tuple[List[Tuple]]:
                 document_number = int(document_number.strip())
 
                 document_score = document.getAttribute("score")
-                document_score = int(document_score.strip())
+                document_score = sum(map(lambda x: int(x) > 0, document_score))
 
                 expected.append(
                     (query_number, document_number, document_score)
