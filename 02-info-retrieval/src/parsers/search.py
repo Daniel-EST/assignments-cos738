@@ -76,8 +76,7 @@ def retrieve_documents(queries_path: str, output_path: str, model_path: str) -> 
         results = __results(query, model)
         rank = 0
         for doc, result in results:
-            if result > 0:
-                utils.write_to_csv(output_path, [], [
-                    (i, [int(doc), rank, result])
-                ], mode="a")
-                rank += 1
+            utils.write_to_csv(output_path, [], [
+                (i, [int(doc), rank, result])
+            ], mode="a")
+            rank += 1
