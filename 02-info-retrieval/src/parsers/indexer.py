@@ -10,7 +10,7 @@ import parsers.inverted_list
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def write_model(input_paths: List[str], output_path_inverted_list: str, output_path_model: str) -> None:
+def write_model(input_paths: List[str], output_path_inverted_list: str, output_path_model: str, steemer: str = False) -> None:
     """
     Calculates the weight of each term for each document using the TF-IDF formula,
     and writes a dictionary of document-term weights to a JSON file.
@@ -24,7 +24,7 @@ def write_model(input_paths: List[str], output_path_inverted_list: str, output_p
     - None
     """
     inverted_list, max_freq_in_document = parsers.inverted_list.parse(
-        input_paths, output_path_inverted_list)
+        input_paths, output_path_inverted_list, steemer=steemer)
     docs = defaultdict(lambda: defaultdict(float))
     total_documents = len(list(max_freq_in_document.values()))
     for term, doc_numbers in inverted_list.items():

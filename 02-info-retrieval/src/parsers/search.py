@@ -11,7 +11,7 @@ import utils
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def __read_parsed_query_file(input_path: str) -> Dict[int, str]:
+def __read_parsed_query_file(input_path: str, steemer: bool = False) -> Dict[int, str]:
     logging.info(
         "SEARCH PARSER - Reading queries file %s", input_path
     )
@@ -20,7 +20,8 @@ def __read_parsed_query_file(input_path: str) -> Dict[int, str]:
         reader = csv.DictReader(file, delimiter=";")
         for row in reader:
             queries[int(row["QueryNumber"])] = utils.normalize_text(
-                row["QueryText"]).split(" ")
+                row["QueryText"], stopwords=True, steemer=steemer
+            ).split(" ")
     return queries
 
 
@@ -65,8 +66,8 @@ def __results(query: List[str], model: Dict[str, Dict[str, float]]) -> List[Tupl
     return results
 
 
-def retrieve_documents(queries_path: str, output_path: str, model_path: str) -> None:
-    queries = __read_parsed_query_file(queries_path.strip())
+def retrieve_documents(queries_path: str, output_path: str, model_path: str, steemer: str = False) -> None:
+    queries = __read_parsed_query_file(queries_path.strip(), steemer=steemer)
     model = __read_model(model_path.strip())
     logging.info(
         "SEARCH PARSER - Saving query results fiel as %s", output_path

@@ -7,7 +7,7 @@ import utils
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def __read_raw_query_file(input_path: str) -> Tuple[List[Tuple]]:
+def __read_raw_query_file(input_path: str, steemer: bool = False) -> Tuple[List[Tuple]]:
     """
     Read an XML file containing queries and their expected results, and return a tuple with two lists:
     the parsed queries and their expected results.
@@ -40,7 +40,8 @@ def __read_raw_query_file(input_path: str) -> Tuple[List[Tuple]]:
                 "QueryText"
             )[0].firstChild.nodeValue
 
-            query_text = utils.normalize_text(query_text, stopwords=False)
+            query_text = utils.normalize_text(
+                query_text, stopwords=False, steemer=steemer)
 
             queries.append((query_number, query_text))
             logging.debug("QUERY PARSER - QUERIES FILE: QueryNumber: %d; QueryText: %s",
@@ -114,7 +115,7 @@ def __write_expected_file(output_path: str, expected: List[Tuple]) -> None:
     utils.write_to_csv(output_path, fieldnames, expected)
 
 
-def parse(input_path: str,  ouput_query_path: str, ouput_expected_path: str) -> None:
+def parse(input_path: str,  ouput_query_path: str, ouput_expected_path: str, steemer: bool = False) -> None:
     """
     Parse an XML file containing queries and their expected results.
 
@@ -130,6 +131,6 @@ def parse(input_path: str,  ouput_query_path: str, ouput_expected_path: str) -> 
     - Two CSV files named after the config file containing the parsed queries
       and their expected results, respectively.
     """
-    queries, expected = __read_raw_query_file(input_path)
+    queries, expected = __read_raw_query_file(input_path, steemer=steemer)
     __write_query_file(ouput_query_path, queries)
     __write_expected_file(ouput_expected_path, expected)

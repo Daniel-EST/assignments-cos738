@@ -2,7 +2,9 @@ import argparse
 import configparser
 import logging
 
-from parsers import indexer, inverted_list, query, search
+import matplotlib.pyplot as plt
+
+from parsers import indexer, inverted_list, query, search, evaluate
 
 logging.basicConfig(
     format="%(levelname)s: %(message)s",
@@ -39,7 +41,10 @@ def main(**kwargs) -> None:
         queries_path = config["DEFAULT"]["LEIA"]
         parsed_queries_path = config["DEFAULT"]["CONSULTAS"]
         expected_path = config["DEFAULT"]["ESPERADOS"]
-        query.parse(queries_path, parsed_queries_path, expected_path)
+        query.parse(queries_path, parsed_queries_path,
+                    expected_path, steemer=False)
+        # query.parse(queries_path, parsed_queries_path,
+        #             expected_path, steemer=True)
 
     if kwargs["create_inverted_list"] and not kwargs["run_indexer"]:
         config.read(kwargs["config_gli"])
@@ -50,7 +55,9 @@ def main(**kwargs) -> None:
             filter(lambda document_path: document_path.strip()
                    != "", documents_paths)
         )
-        inverted_list.parse(documents_paths, inverted_list_path)
+
+        inverted_list.parse(documents_paths, inverted_list_path, steemer=False)
+        # inverted_list.parse(documents_paths, inverted_list_path, steemer=True)
 
     if kwargs["run_indexer"]:
         config.read(kwargs["config_gli"])
@@ -63,14 +70,40 @@ def main(**kwargs) -> None:
         documents_paths = list(
             filter(lambda input_path: input_path.strip() != "", documents_paths)
         )
-        indexer.write_model(documents_paths, inverted_list_path, model_path)
+        indexer.write_model(
+            documents_paths, inverted_list_path, model_path, steemer=False)
+        # indexer.write_model(
+        #     documents_paths, inverted_list_path, model_path, steemer=True)
 
     if kwargs["search"]:
         config.read(kwargs["config_busca"])
         queries_path = config["DEFAULT"]["CONSULTAS"]
         results_path = config["DEFAULT"]["RESULTADOS"]
         model_path = config["DEFAULT"]["MODELO"]
-        search.retrieve_documents(queries_path, results_path, model_path)
+        search.retrieve_documents(
+            queries_path, results_path, model_path, steemer=False)
+        # search.retrieve_documents(
+        #     queries_path, results_path, model_path, steemer=True)
+
+    if kwargs["evaluate"]:
+        config.read(kwargs["config_avaliacao"])
+        expected_path = config["DEFAULT"]["ESPERADOS"]
+        retrieved_path = config["DEFAULT"]["RESULTADOS"]
+        max_results = int(config["DEFAULT"]["MAX"])
+        evaluate.interpoloated_average_precision_11_point_graph(
+            retrieved_path, expected_path, "NOSTEEMER"
+        )
+        evaluate.interpoloated_average_precision_11_point_graph(
+            retrieved_path, expected_path, "STEEMER"
+        )
+        plt.legend()
+        plt.show()
+        evaluate.f1_score(retrieved_path, expected_path, "STEEMER")
+        evaluate.f1_score(retrieved_path, expected_path, "NOSTEEMER")
+        evaluate.precision_at_n(retrieved_path, expected_path, 5, "STEEMER")
+        evaluate.precision_at_n(retrieved_path, expected_path, 5, "NOSTEEMER")
+        evaluate.precision_at_n(retrieved_path, expected_path, 10, "STEEMER")
+        evaluate.precision_at_n(retrieved_path, expected_path, 10, "NOSTEEMER")
 
     logging.info("End of program")
 
@@ -85,6 +118,8 @@ if __name__ == "__main__":
                         default="./config/index.cfg", help="Sets the config file path for index")
     parser.add_argument("--config-busca", type=str,
                         default="./config/busca.cfg", help="Sets the config file path for busca")
+    parser.add_argument("--config-avaliacao", type=str,
+                        default="./config/avaliacao.cfg", help="Sets the config file path for avaliacao")
     parser.add_argument("--parse-queries", type=bool,
                         default=True, help="Sets if it should parse queries")
     parser.add_argument("--create-inverted-list",
@@ -93,6 +128,8 @@ if __name__ == "__main__":
                         default=True, help="Sets if it should run indexer")
     parser.add_argument("--search", type=bool, default=True,
                         help="Sets if it should performe a query")
+    parser.add_argument("--evaluate", type=bool, default=True,
+                        help="Sets if it should performe a evaluation")
     parser.add_argument("-q", "--query", type=str,
                         default="", help="Text for a single query")
     args = vars(parser.parse_args())

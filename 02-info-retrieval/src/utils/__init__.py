@@ -3,6 +3,7 @@ import unicodedata
 import re
 import csv
 
+from nltk.stem.porter import PorterStemmer
 
 def strip_accents(s: str) -> str:
     """
@@ -92,7 +93,7 @@ def remove_stopwords(s: str) -> str:
     return s
 
 
-def normalize_text(s: str, stopwords: bool = True) -> str:
+def normalize_text(s: str, stopwords: bool = True, steemer: bool = False) -> str:
     """
     Normalize and preprocess a text string.
 
@@ -121,7 +122,11 @@ def normalize_text(s: str, stopwords: bool = True) -> str:
     s = strip_accents(s)
     s = s.replace("\n", " ")
     s = re.sub(r" +", " ", s)
-    return s.strip()
+    s = s.strip()
+    if steemer:
+        steemer = PorterStemmer()
+        s = steemer.stem(s)
+    return s
 
 
 def write_to_csv(output_path: str, fieldnames: List[str], values: List[Tuple], mode: str = "w") -> None:

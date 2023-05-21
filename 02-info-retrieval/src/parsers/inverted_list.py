@@ -8,7 +8,7 @@ import utils
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def __read_raw_documents_file(input_path: str, inverted_list: Dict[str, List[int]], max_freq_in_document: Dict[int, float]) -> Tuple[DefaultDict[str, List[int]], DefaultDict[int, float]]:
+def __read_raw_documents_file(input_path: str, inverted_list: Dict[str, List[int]], max_freq_in_document: Dict[int, float], steemer: bool = False) -> Tuple[DefaultDict[str, List[int]], DefaultDict[int, float]]:
     """
     Read an XML file and extract terms from the abstracts or extracts.
 
@@ -45,7 +45,8 @@ def __read_raw_documents_file(input_path: str, inverted_list: Dict[str, List[int
                 abstract = extract[0].firstChild.nodeValue
 
             if abstract:
-                abstract = utils.normalize_text(abstract, stopwords=True)
+                abstract = utils.normalize_text(
+                    abstract, stopwords=True, steemer=steemer)
                 abstract = [term.strip() for term in abstract.split(" ")]
                 terms = set(abstract)
                 most_freq_term = max(terms, key=abstract.count)
@@ -78,7 +79,7 @@ def __write_inverted_list_file(output_path: str, terms: List[Tuple]) -> None:
     utils.write_to_csv(output_path, fieldnames, terms)
 
 
-def parse(input_paths: List[str],  ouput_path: str) -> Tuple[DefaultDict[str, List[int]], DefaultDict[int, float]]:
+def parse(input_paths: List[str],  ouput_path: str, steemer: bool = False) -> Tuple[DefaultDict[str, List[int]], DefaultDict[int, float]]:
     """
     Parse one or more XML files containing documents, save the inverted list to a CSV file, and return two defaultdicts.
 
@@ -102,7 +103,7 @@ def parse(input_paths: List[str],  ouput_path: str) -> Tuple[DefaultDict[str, Li
     max_freq_in_document = defaultdict(lambda: defaultdict(float))
     for input_path in input_paths:
         inverted_list, max_freq_in_document = __read_raw_documents_file(
-            input_path.strip(), inverted_list, max_freq_in_document
+            input_path.strip(), inverted_list, max_freq_in_document, steemer
         )
     logging.info("INVERTED LIST - Inverted list found %d terms",
                  len(inverted_list.values()))
