@@ -5,6 +5,7 @@ import csv
 
 from nltk.stem.porter import PorterStemmer
 
+
 def strip_accents(s: str) -> str:
     """
     Remove accents and diacritical marks from a text string.
