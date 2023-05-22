@@ -159,3 +159,28 @@ def mean_average_precision(retrieved_path: str, expected_path: str, max_n: int, 
         "EVALUATION - %s's MAP: %.02f", label, m
     )
     return m
+
+
+def mean_reciprocal_rank(retrieved_path: str, expected_path: str, max_k: int, max_n: int, label: str) -> float:
+    logging.info(
+        "EVALUATION - Calculating %s's MRR", label
+    )
+    retrieved = __read_retrieved_documents(retrieved_path)
+    expected = __read_expected_documents(expected_path)
+    reciprocal_ranks = []
+    for query, expected_documents in expected.items():
+        lim = min(len(set(expected_documents)), max_n)
+        for k, retrieved_document in enumerate(retrieved[query][:lim]):
+            if k > max_k:
+                reciprocal_ranks.append(0)
+                break
+            if retrieved_document in set(expected_documents):
+                reciprocal_ranks.append(1/(k + 1))
+                break
+
+    mrr = statistics.mean(reciprocal_ranks)
+
+    logging.info(
+        "EVALUATION - %s's MRR: %.02f", label, mrr
+    )
+    return mrr
