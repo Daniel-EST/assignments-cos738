@@ -2,6 +2,7 @@ import logging
 import csv
 import statistics
 from collections import defaultdict
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 from nltk.metrics import precision, recall, f_measure
@@ -43,7 +44,7 @@ def __read_expected_documents(path: str) -> defaultdict:
     return expected
 
 
-def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected_path: str, label: str, color: str = "r") -> None:
+def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected_path: str, label: str) -> None:
     logging.info(
         "EVALUATION - Plotting 11-Point Interpolated Average Precision")
     retrieved = __read_retrieved_documents(retrieved_path)
@@ -100,7 +101,8 @@ def f1_score(retrieved_path: str, expected_path: str, label: str, max_results: i
     scores = []
     for query, documents in expected.items():
         reference = set(documents)
-        test = set(retrieved[query][:max_results])
+        lim = min(len(documents), max_results)
+        test = set(retrieved[query][:lim])
         scores.append(
             f_measure(reference, test)
         )
@@ -110,20 +112,50 @@ def f1_score(retrieved_path: str, expected_path: str, label: str, max_results: i
     )
 
 
-def precision_at_n(retrieved_path: str, expected_path: str, n: int, label: str) -> None:
+def precision_at_n(retrieved_path: str, expected_path: str, n: int, label: str) -> Dict[str, List[int]]:
     logging.info(
         "EVALUATION - Calculating %s's P@%d", label, n
     )
     retrieved = __read_retrieved_documents(retrieved_path)
     expected = __read_expected_documents(expected_path)
-    precisions = []
+    precisions = {}
     for query, documents in expected.items():
         reference = set(documents)
-        test = set(retrieved[query][:n])
-        precisions.append(
-            precision(reference, test)
-        )
+        lim = min(len(documents), n)
+        test = set(retrieved[query][:lim])
+        precisions[query] = precision(reference, test)
 
+    for query, p in precisions.items():
+        logging.info(
+            "EVALUATION - %s's P@%d Q%d: %.02f", label, n, query, p
+        )
+    return precisions
+
+
+def mean_average_precision(retrieved_path: str, expected_path: str, max_n: int, label: str) -> float:
     logging.info(
-        "EVALUATION - %s's P@%d: %.02f", label, n, statistics.mean(precisions)
+        "EVALUATION - Calculating %s's MAP", label
     )
+    retrieved = __read_retrieved_documents(retrieved_path)
+    expected = __read_expected_documents(expected_path)
+    precisions = defaultdict(list)
+    for n in range(max_n):
+        last_precision = 0.0
+        for query, documents in expected.items():
+            reference = set(documents)
+            lim = min(len(documents), n+1)
+            test = set(retrieved[query][:lim])
+            p = precision(reference, test)
+            if p > last_precision:
+                precisions[query].append(p)
+            last_precision = p
+
+    mean_precisions = []
+    for p in precisions.values():
+        mean_precisions.append(statistics.mean(p))
+
+    m = statistics.mean(mean_precisions)
+    logging.info(
+        "EVALUATION - %s's MAP: %.02f", label, m
+    )
+    return m

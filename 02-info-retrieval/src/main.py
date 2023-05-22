@@ -36,6 +36,7 @@ def main(**kwargs) -> None:
     Returns:
         None
     """
+    logging.info("Program started")
     if kwargs["parse_queries"]:
         config.read(kwargs["config_pc"])
         queries_path = config["DEFAULT"]["LEIA"]
@@ -98,12 +99,21 @@ def main(**kwargs) -> None:
         )
         plt.legend()
         plt.show()
+        plt.clf()
+
         evaluate.f1_score(retrieved_path, expected_path, "STEEMER")
         evaluate.f1_score(retrieved_path, expected_path, "NOSTEEMER")
+
         evaluate.precision_at_n(retrieved_path, expected_path, 5, "STEEMER")
         evaluate.precision_at_n(retrieved_path, expected_path, 5, "NOSTEEMER")
+
         evaluate.precision_at_n(retrieved_path, expected_path, 10, "STEEMER")
         evaluate.precision_at_n(retrieved_path, expected_path, 10, "NOSTEEMER")
+
+        evaluate.mean_average_precision(
+            retrieved_path, expected_path, 10, "STEEMER")
+        evaluate.mean_average_precision(
+            retrieved_path, expected_path, 10, "NOSTEEMER")
 
     logging.info("End of program")
 
