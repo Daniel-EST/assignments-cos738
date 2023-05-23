@@ -112,6 +112,15 @@ def main(**kwargs) -> None:
         evaluate.precision_at_n(retrieved_path, expected_path, 10, "NOSTEEMER")
         evaluate.precision_at_n(retrieved_path, expected_path, 10, "STEEMER")
 
+        evaluate.r_precision_histogram(
+            [retrieved_path, retrieved_path],
+            [expected_path, expected_path],
+            max_results,
+            ["NOSTEEMER", "STEEMER"]
+        )
+        plt.show()
+        plt.clf()
+
         evaluate.mean_average_precision(
             retrieved_path, expected_path, max_results, "NOSTEEMER")
         evaluate.mean_average_precision(

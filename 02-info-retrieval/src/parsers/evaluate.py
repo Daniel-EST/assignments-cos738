@@ -22,10 +22,6 @@ def __read_retrieved_documents(path: str) -> defaultdict:
                 "Rank": int(result[1]),
                 "Similarity": float(result[2])
             })
-            # results[int(row["QueryNumber"])].append(
-            #     eval(row["Result"])[0]
-            # )
-
     return results
 
 
@@ -38,10 +34,6 @@ def __read_expected_documents(path: str) -> defaultdict:
                 "Document": int(row["DocNumber"]),
                 "Votes": int(row["DocVotes"])
             })
-            # expected[int(row["QueryNumber"])].append(
-            #     int(row["DocNumber"])
-            # )
-
     return expected
 
 
@@ -132,6 +124,44 @@ def precision_at_n(retrieved_path: str, expected_path: str, n: int, label: str) 
             "EVALUATION - %s's P@%d Q%d: %.02f", label, n, query, p
         )
     return precisions
+
+
+def r_precision(retrieved_path: str, expected_path: str, r: int, label: str) -> Dict[str, List[int]]:
+    logging.info(
+        "EVALUATION - Calculating %s's R-precision", label
+    )
+    retrieved = __read_retrieved_documents(retrieved_path)
+    expected = __read_expected_documents(expected_path)
+    r_precisions = {}
+    for query, documents in expected.items():
+        reference = set(map(lambda x: x["Document"], documents))
+        lim = min(len(documents), r)
+        test = set(map(lambda x: x["Document"], retrieved[query][:lim]))
+        correct = list(filter(lambda x: x in reference, test))
+        r_precisions[query] = len(correct)/len(test)
+
+    for query, r in r_precisions.items():
+        logging.info(
+            "EVALUATION - %s's R-precision Q%d: %.02f", label, query, r
+        )
+    return r_precisions
+
+
+def r_precision_histogram(retrieved_paths: List[str], expected_paths: List[str], r: int, labels: List[str]) -> None:
+    logging.info(
+        "EVALUATION - R-Precision Histogram"
+    )
+
+    r_precisions_01 = r_precision(retrieved_paths[0], expected_paths[0], r, labels[0])
+    r_precisions_02 = r_precision(retrieved_paths[1], expected_paths[1], r, labels[1])
+
+    r_precision_total = {}
+    for query in r_precisions_01.keys():
+        r_precision_total[query] = r_precisions_01[query] - \
+            r_precisions_02[query]
+
+    plt.bar(r_precision_total.keys(), r_precision_total.values(), width=1)
+    logging.info("EVALUATION - Plotted")
 
 
 def mean_average_precision(retrieved_path: str, expected_path: str, max_n: int, label: str) -> float:
