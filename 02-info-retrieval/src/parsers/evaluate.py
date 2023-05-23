@@ -1,6 +1,7 @@
 import logging
 import csv
 import statistics
+import math
 from collections import defaultdict
 from typing import Dict, List
 
@@ -15,15 +16,15 @@ def __read_retrieved_documents(path: str) -> defaultdict:
     with open(path, "r", encoding="utf-8") as csv_file:
         rows = csv.DictReader(csv_file, delimiter=";")
         for row in rows:
-            # result = row["Result"]
-            # results[row["QueryNumber"]].append({
-            #     "Document": result[0],
-            #     "Rank": result[1],
-            #     "Similarity": result[2]
-            # })
-            results[int(row["QueryNumber"])].append(
-                eval(row["Result"])[0]
-            )
+            result = eval(row["Result"])
+            results[int(row["QueryNumber"])].append({
+                "Document": int(result[0]),
+                "Rank": int(result[1]),
+                "Similarity": float(result[2])
+            })
+            # results[int(row["QueryNumber"])].append(
+            #     eval(row["Result"])[0]
+            # )
 
     return results
 
@@ -33,13 +34,13 @@ def __read_expected_documents(path: str) -> defaultdict:
     with open(path, "r", encoding="utf-8") as csv_file:
         rows = csv.DictReader(csv_file, delimiter=";")
         for row in rows:
-            # expected[row["QueryNumber"]].append({
-            #     "Document": row["DocNumber"],
-            #     "Votes": row["DocVotes"]
-            # })
-            expected[int(row["QueryNumber"])].append(
-                int(row["DocNumber"])
-            )
+            expected[int(row["QueryNumber"])].append({
+                "Document": int(row["DocNumber"]),
+                "Votes": int(row["DocVotes"])
+            })
+            # expected[int(row["QueryNumber"])].append(
+            #     int(row["DocNumber"])
+            # )
 
     return expected
 
@@ -54,9 +55,9 @@ def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected
     interpolations = []
 
     for query, documents in expected.items():
-        reference = set(documents)
+        reference = set(map(lambda x: x["Document"], documents))
         for i in range(len(retrieved[query])):
-            test = set(retrieved[query][:i+1])
+            test = set(map(lambda x: x["Document"], retrieved[query][:i+1]))
             precisions[query].append(
                 precision(reference, test)
             )
@@ -66,6 +67,7 @@ def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected
 
     queries = set(expected.keys())
     eleven_points = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+
     for query in queries:
         inter = []
         for i, _ in enumerate(eleven_points):
@@ -100,9 +102,9 @@ def f1_score(retrieved_path: str, expected_path: str, label: str, max_results: i
     expected = __read_expected_documents(expected_path)
     scores = []
     for query, documents in expected.items():
-        reference = set(documents)
+        reference = set(map(lambda x: x["Document"], documents))
         lim = min(len(documents), max_results)
-        test = set(retrieved[query][:lim])
+        test = set(map(lambda x: x["Document"], retrieved[query][:lim]))
         scores.append(
             f_measure(reference, test)
         )
@@ -120,9 +122,9 @@ def precision_at_n(retrieved_path: str, expected_path: str, n: int, label: str) 
     expected = __read_expected_documents(expected_path)
     precisions = {}
     for query, documents in expected.items():
-        reference = set(documents)
+        reference = set(map(lambda x: x["Document"], documents))
         lim = min(len(documents), n)
-        test = set(retrieved[query][:lim])
+        test = set(map(lambda x: x["Document"], retrieved[query][:lim]))
         precisions[query] = precision(reference, test)
 
     for query, p in precisions.items():
@@ -142,9 +144,9 @@ def mean_average_precision(retrieved_path: str, expected_path: str, max_n: int, 
     for n in range(max_n):
         last_precision = 0.0
         for query, documents in expected.items():
-            reference = set(documents)
+            reference = set(map(lambda x: x["Document"], documents))
             lim = min(len(documents), n+1)
-            test = set(retrieved[query][:lim])
+            test = set(map(lambda x: x["Document"], retrieved[query][:lim]))
             p = precision(reference, test)
             if p > last_precision:
                 precisions[query].append(p)
@@ -169,12 +171,15 @@ def mean_reciprocal_rank(retrieved_path: str, expected_path: str, max_k: int, ma
     expected = __read_expected_documents(expected_path)
     reciprocal_ranks = []
     for query, expected_documents in expected.items():
-        lim = min(len(set(expected_documents)), max_n)
+        reference = set(map(lambda x: x["Document"], expected_documents))
+        lim = min(
+            len(reference), max_n
+        )
         for k, retrieved_document in enumerate(retrieved[query][:lim]):
             if k > max_k:
                 reciprocal_ranks.append(0)
                 break
-            if retrieved_document in set(expected_documents):
+            if retrieved_document["Document"] in reference:
                 reciprocal_ranks.append(1/(k + 1))
                 break
 
@@ -184,3 +189,84 @@ def mean_reciprocal_rank(retrieved_path: str, expected_path: str, max_k: int, ma
         "EVALUATION - %s's MRR: %.02f", label, mrr
     )
     return mrr
+
+
+def __calculate_discount(rank: int, i: int, dcg_1: int = 0) -> float:
+    if i == 1:
+        return rank
+    return rank/math.log(i, 2) + dcg_1
+
+
+def discounted_cumulative_gain(retrieved_path: str, expected_path: str, max_n: int, label: str) -> float:
+    logging.info(
+        "EVALUATION - Calculating %s's DCG", label
+    )
+    retrieved = __read_retrieved_documents(retrieved_path)
+    expected = __read_expected_documents(expected_path)
+    dcgs = defaultdict(list)
+    for query, expected_documents in expected.items():
+        reference = set(map(lambda x: x["Document"], expected_documents))
+        # lim = min(
+        #     len(expected_documents), max_n
+        # )
+        lim = max_n
+        dcg_1 = 0
+        for i, document in enumerate(retrieved[query][:lim]):
+            doc_number = document["Document"]
+            if doc_number in reference:
+                a = filter(lambda x: x["Document"] ==
+                           doc_number, expected_documents)
+                b = list(map(lambda x: x["Votes"], a))[0]
+                dcgs[query].append(__calculate_discount(b, i + 1, dcg_1))
+                if i == 0:
+                    dcg_1 = b
+            else:
+                dcgs[query].append(__calculate_discount(0, i + 1, dcg_1))
+                if i == 0:
+                    dcg_1 = 0
+
+    mean_dcg = []
+    for dcg in dcgs.values():
+        mean_dcg.append(statistics.mean(dcg))
+
+    logging.info(
+        "EVALUATION - %s's DCG: [%s]", label, ", ".join(
+            map(lambda x: str(round(x, 2)), mean_dcg))
+    )
+
+    return mean_dcg
+
+
+def normalized_dicounted_comulative_gain(retrieved_path: str, expected_path: str, max_n: int, label: str) -> Dict[int, float]:
+    logging.info(
+        "EVALUATION - Calculating %s's DCG", label
+    )
+    retrieved = __read_retrieved_documents(retrieved_path)
+    expected = __read_expected_documents(expected_path)
+    ndcgs = defaultdict(float)
+    for query, expected_documents in expected.items():
+        reference = set(map(lambda x: x["Document"], expected_documents))
+        lim = min(
+            len(expected_documents), max_n
+        )
+        sorted_expected_documents = sorted(expected_documents,
+                                           key=lambda x: x["Votes"], reverse=True)[:lim]
+        idcg = 0
+        for i, document in enumerate(sorted_expected_documents):
+            idcg += __calculate_discount(document["Votes"], i + 1)
+        dcg = 0
+        for i, document in enumerate(retrieved[query][:lim]):
+            doc_number = document["Document"]
+            if doc_number in reference:
+                a = filter(lambda x: x["Document"] ==
+                           doc_number, expected_documents)
+                b = list(map(lambda x: x["Votes"], a))[0]
+                dcg += __calculate_discount(b, i + 1)
+            else:
+                dcg += __calculate_discount(0, i + 1)
+        ndcgs[query] = dcg/idcg
+    for query, ndcg in ndcgs.items():
+        logging.info(
+            "EVALUATION - %s's nDCG Q%d: %.02f", label, query, ndcg
+        )
+    return ndcgs

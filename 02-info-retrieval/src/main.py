@@ -102,25 +102,35 @@ def main(**kwargs) -> None:
         plt.clf()
 
         evaluate.f1_score(retrieved_path, expected_path,
-                          "STEEMER", max_results)
-        evaluate.f1_score(retrieved_path, expected_path,
                           "NOSTEEMER", max_results)
+        evaluate.f1_score(retrieved_path, expected_path,
+                          "STEEMER", max_results)
 
-        evaluate.precision_at_n(retrieved_path, expected_path, 5, "STEEMER")
         evaluate.precision_at_n(retrieved_path, expected_path, 5, "NOSTEEMER")
+        evaluate.precision_at_n(retrieved_path, expected_path, 5, "STEEMER")
 
-        evaluate.precision_at_n(retrieved_path, expected_path, 10, "STEEMER")
         evaluate.precision_at_n(retrieved_path, expected_path, 10, "NOSTEEMER")
+        evaluate.precision_at_n(retrieved_path, expected_path, 10, "STEEMER")
 
-        evaluate.mean_average_precision(
-            retrieved_path, expected_path, max_results, "STEEMER")
         evaluate.mean_average_precision(
             retrieved_path, expected_path, max_results, "NOSTEEMER")
+        evaluate.mean_average_precision(
+            retrieved_path, expected_path, max_results, "STEEMER")
 
         evaluate.mean_reciprocal_rank(
-            retrieved_path, expected_path, 10, max_results, "STEEMER")
-        evaluate.mean_reciprocal_rank(
             retrieved_path, expected_path, 10, max_results, "NOSTEEMER")
+        evaluate.mean_reciprocal_rank(
+            retrieved_path, expected_path, 10, max_results, "STEEMER")
+
+        evaluate.discounted_cumulative_gain(
+            retrieved_path, expected_path, max_results, "NOSTEEMER")
+        evaluate.discounted_cumulative_gain(
+            retrieved_path, expected_path, max_results, "STEEMER")
+
+        evaluate.normalized_dicounted_comulative_gain(
+            retrieved_path, expected_path, max_results, "NOSTEEMER")
+        evaluate.normalized_dicounted_comulative_gain(
+            retrieved_path, expected_path, max_results, "STEEMER")
 
     logging.info("End of program")
 
