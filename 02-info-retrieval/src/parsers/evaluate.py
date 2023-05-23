@@ -152,15 +152,18 @@ def r_precision_histogram(retrieved_paths: List[str], expected_paths: List[str],
         "EVALUATION - R-Precision Histogram"
     )
 
-    r_precisions_01 = r_precision(retrieved_paths[0], expected_paths[0], r, labels[0])
-    r_precisions_02 = r_precision(retrieved_paths[1], expected_paths[1], r, labels[1])
+    r_precisions_01 = r_precision(
+        retrieved_paths[0], expected_paths[0], r, labels[0])
+    r_precisions_02 = r_precision(
+        retrieved_paths[1], expected_paths[1], r, labels[1])
 
     r_precision_total = {}
     for query in r_precisions_01.keys():
         r_precision_total[query] = r_precisions_01[query] - \
             r_precisions_02[query]
 
-    plt.bar(r_precision_total.keys(), r_precision_total.values(), width=1)
+    plt.bar(["Q" + str(r) for r in r_precision_total.keys()],
+            r_precision_total.values(), width=2)
     logging.info("EVALUATION - Plotted")
 
 
