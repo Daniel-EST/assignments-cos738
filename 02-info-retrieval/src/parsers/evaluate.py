@@ -37,7 +37,7 @@ def __read_expected_documents(path: str) -> defaultdict:
     return expected
 
 
-def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected_path: str, label: str) -> None:
+def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected_path: str, label: str, color: str) -> None:
     logging.info(
         "EVALUATION - Plotting 11-Point Interpolated Average Precision")
     retrieved = __read_retrieved_documents(retrieved_path)
@@ -77,8 +77,8 @@ def interpoloated_average_precision_11_point_graph(retrieved_path: str, expected
             )
         )
 
-    plt.plot(eleven_points, interpolation_mean, "--", label=label)
-    plt.plot(eleven_points, interpolation_mean, ".")
+    plt.plot(eleven_points, interpolation_mean, "--", color=color, label=label)
+    plt.plot(eleven_points, interpolation_mean, ".", color=color)
     plt.xlabel("Precision")
     plt.ylabel("Recall")
     plt.xlim(-0.05, 1.05)
@@ -162,8 +162,28 @@ def r_precision_histogram(retrieved_paths: List[str], expected_paths: List[str],
         r_precision_total[query] = r_precisions_01[query] - \
             r_precisions_02[query]
 
-    plt.bar(["Q" + str(r) for r in r_precision_total.keys()],
-            r_precision_total.values(), width=2)
+    plt.bar(r_precision_total.keys(),
+            r_precision_total.values(),
+            width=0.75,
+            color="blue",
+            label=labels[0]
+            )
+
+    negative = dict(filter(lambda x: x[1] < 0, r_precision_total.items()))
+    plt.bar(negative.keys(),
+            negative.values(),
+            width=0.75,
+            color="red",
+            label=labels[1]
+            )
+
+    plt.plot(
+        r_precision_total.keys(),
+        [0] * len(r_precision_total.keys()),
+        "k--"
+    )
+    # plt.xlabel()
+    plt.legend()
     logging.info("EVALUATION - Plotted")
 
 

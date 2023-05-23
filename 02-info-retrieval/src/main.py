@@ -39,82 +39,119 @@ def main(**kwargs) -> None:
     logging.info("Program started")
     if kwargs["parse_queries"]:
         config.read(kwargs["config_pc"])
-        queries_path = config["DEFAULT"]["LEIA"]
-        parsed_queries_path = config["DEFAULT"]["CONSULTAS"]
-        expected_path = config["DEFAULT"]["ESPERADOS"]
+        queries_path = config["NOSTEEMER"]["LEIA"]
+        parsed_queries_path = config["NOSTEEMER"]["CONSULTAS"]
+        expected_path = config["NOSTEEMER"]["ESPERADOS"]
         query.parse(queries_path, parsed_queries_path,
                     expected_path, steemer=False)
-        # query.parse(queries_path, parsed_queries_path,
-        #             expected_path, steemer=True)
+
+        queries_path = config["STEEMER"]["LEIA"]
+        parsed_queries_path = config["STEEMER"]["CONSULTAS"]
+        expected_path = config["STEEMER"]["ESPERADOS"]
+        query.parse(queries_path, parsed_queries_path,
+                    expected_path, steemer=True)
 
     if kwargs["create_inverted_list"] and not kwargs["run_indexer"]:
         config.read(kwargs["config_gli"])
-        documents_paths = config["DEFAULT"]["LEIA"]
-        inverted_list_path = config["DEFAULT"]["ESCREVA"]
+        documents_paths = config["NOSTEEMER"]["LEIA"]
+        inverted_list_path = config["NOSTEEMER"]["ESCREVA"]
         documents_paths = documents_paths.split(",")
         documents_paths = list(
             filter(lambda document_path: document_path.strip()
                    != "", documents_paths)
         )
-
         inverted_list.parse(documents_paths, inverted_list_path, steemer=False)
-        # inverted_list.parse(documents_paths, inverted_list_path, steemer=True)
+
+        documents_paths = config["STEEMER"]["LEIA"]
+        inverted_list_path = config["STEEMER"]["ESCREVA"]
+        documents_paths = documents_paths.split(",")
+        documents_paths = list(
+            filter(lambda document_path: document_path.strip()
+                   != "", documents_paths)
+        )
+        inverted_list.parse(documents_paths, inverted_list_path, steemer=True)
 
     if kwargs["run_indexer"]:
         config.read(kwargs["config_gli"])
-        inverted_list_path = config["DEFAULT"]["ESCREVA"]
+        inverted_list_path = config["NOSTEEMER"]["ESCREVA"]
 
         config.read(kwargs["config_index"])
-        documents_paths = config["DEFAULT"]["LEIA"]
-        model_path = config["DEFAULT"]["ESCREVA"]
+        documents_paths = config["NOSTEEMER"]["LEIA"]
+        model_path = config["NOSTEEMER"]["ESCREVA"]
         documents_paths = documents_paths.split(",")
         documents_paths = list(
             filter(lambda input_path: input_path.strip() != "", documents_paths)
         )
         indexer.write_model(
             documents_paths, inverted_list_path, model_path, steemer=False)
-        # indexer.write_model(
-        #     documents_paths, inverted_list_path, model_path, steemer=True)
+
+        config.read(kwargs["config_gli"])
+        inverted_list_path = config["STEEMER"]["ESCREVA"]
+
+        config.read(kwargs["config_index"])
+        documents_paths = config["STEEMER"]["LEIA"]
+        model_path = config["STEEMER"]["ESCREVA"]
+        documents_paths = documents_paths.split(",")
+        documents_paths = list(
+            filter(lambda input_path: input_path.strip() != "", documents_paths)
+        )
+        indexer.write_model(
+            documents_paths, inverted_list_path, model_path, steemer=True)
 
     if kwargs["search"]:
         config.read(kwargs["config_busca"])
-        queries_path = config["DEFAULT"]["CONSULTAS"]
-        results_path = config["DEFAULT"]["RESULTADOS"]
-        model_path = config["DEFAULT"]["MODELO"]
+        queries_path = config["NOSTEEMER"]["CONSULTAS"]
+        results_path = config["NOSTEEMER"]["RESULTADOS"]
+        model_path = config["NOSTEEMER"]["MODELO"]
         search.retrieve_documents(
             queries_path, results_path, model_path, steemer=False)
-        # search.retrieve_documents(
-        #     queries_path, results_path, model_path, steemer=True)
+
+        queries_path = config["STEEMER"]["CONSULTAS"]
+        results_path = config["STEEMER"]["RESULTADOS"]
+        model_path = config["STEEMER"]["MODELO"]
+        search.retrieve_documents(
+            queries_path, results_path, model_path, steemer=True)
 
     if kwargs["evaluate"]:
         config.read(kwargs["config_avaliacao"])
-        expected_path = config["DEFAULT"]["ESPERADOS"]
-        retrieved_path = config["DEFAULT"]["RESULTADOS"]
-        max_results = int(config["DEFAULT"]["MAX"])
+        NOSTEEMER_expected_path = config["NOSTEEMER"]["ESPERADOS"]
+        NOSTEEMER_retrieved_path = config["NOSTEEMER"]["RESULTADOS"]
+        NOSTEEMER_max_results = int(config["NOSTEEMER"]["MAX"])
+
+        STEEMER_expected_path = config["STEEMER"]["ESPERADOS"]
+        STEEMER_retrieved_path = config["STEEMER"]["RESULTADOS"]
+        STEEMER_max_results = int(config["STEEMER"]["MAX"])
+
+        max_results = max(NOSTEEMER_max_results, STEEMER_max_results)
+
         evaluate.interpoloated_average_precision_11_point_graph(
-            retrieved_path, expected_path, "NOSTEEMER"
+            NOSTEEMER_retrieved_path, NOSTEEMER_expected_path, "NOSTEEMER", "red"
         )
         evaluate.interpoloated_average_precision_11_point_graph(
-            retrieved_path, expected_path, "STEEMER"
+            STEEMER_retrieved_path, STEEMER_expected_path, "STEEMER", "blue"
         )
         plt.legend()
         plt.show()
         plt.clf()
 
-        evaluate.f1_score(retrieved_path, expected_path,
+        evaluate.f1_score(NOSTEEMER_retrieved_path, NOSTEEMER_expected_path,
                           "NOSTEEMER", max_results)
-        evaluate.f1_score(retrieved_path, expected_path,
+        evaluate.f1_score(STEEMER_retrieved_path, STEEMER_expected_path,
                           "STEEMER", max_results)
 
-        evaluate.precision_at_n(retrieved_path, expected_path, 5, "NOSTEEMER")
-        evaluate.precision_at_n(retrieved_path, expected_path, 5, "STEEMER")
+        evaluate.precision_at_n(NOSTEEMER_retrieved_path,
+                                NOSTEEMER_expected_path, 5, "NOSTEEMER")
+        evaluate.precision_at_n(STEEMER_retrieved_path,
+                                STEEMER_expected_path, 5, "STEEMER")
 
-        evaluate.precision_at_n(retrieved_path, expected_path, 10, "NOSTEEMER")
-        evaluate.precision_at_n(retrieved_path, expected_path, 10, "STEEMER")
+        evaluate.precision_at_n(NOSTEEMER_retrieved_path,
+                                NOSTEEMER_expected_path, 10, "NOSTEEMER")
+        evaluate.precision_at_n(STEEMER_retrieved_path,
+                                STEEMER_expected_path, 10, "STEEMER")
 
         evaluate.r_precision_histogram(
-            [retrieved_path, retrieved_path],
-            [expected_path, expected_path],
+            [NOSTEEMER_retrieved_path, STEEMER_retrieved_path],
+            [NOSTEEMER_expected_path, STEEMER_expected_path],
             max_results,
             ["NOSTEEMER", "STEEMER"]
         )
@@ -122,24 +159,24 @@ def main(**kwargs) -> None:
         plt.clf()
 
         evaluate.mean_average_precision(
-            retrieved_path, expected_path, max_results, "NOSTEEMER")
+            NOSTEEMER_retrieved_path, NOSTEEMER_expected_path, max_results, "NOSTEEMER")
         evaluate.mean_average_precision(
-            retrieved_path, expected_path, max_results, "STEEMER")
+            STEEMER_retrieved_path, STEEMER_expected_path, max_results, "STEEMER")
 
         evaluate.mean_reciprocal_rank(
-            retrieved_path, expected_path, 10, max_results, "NOSTEEMER")
+            NOSTEEMER_retrieved_path, NOSTEEMER_expected_path, 10, max_results, "NOSTEEMER")
         evaluate.mean_reciprocal_rank(
-            retrieved_path, expected_path, 10, max_results, "STEEMER")
+            STEEMER_retrieved_path, STEEMER_expected_path, 10, max_results, "STEEMER")
 
         evaluate.discounted_cumulative_gain(
-            retrieved_path, expected_path, max_results, "NOSTEEMER")
+            NOSTEEMER_retrieved_path, NOSTEEMER_expected_path, max_results, "NOSTEEMER")
         evaluate.discounted_cumulative_gain(
-            retrieved_path, expected_path, max_results, "STEEMER")
+            STEEMER_retrieved_path, STEEMER_expected_path, max_results, "STEEMER")
 
         evaluate.normalized_dicounted_comulative_gain(
-            retrieved_path, expected_path, max_results, "NOSTEEMER")
+            NOSTEEMER_retrieved_path, NOSTEEMER_expected_path, max_results, "NOSTEEMER")
         evaluate.normalized_dicounted_comulative_gain(
-            retrieved_path, expected_path, max_results, "STEEMER")
+            STEEMER_retrieved_path, STEEMER_expected_path, max_results, "STEEMER")
 
     logging.info("End of program")
 
