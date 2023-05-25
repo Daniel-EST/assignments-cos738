@@ -8,6 +8,8 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 from nltk.metrics import precision, recall, f_measure
 
+import utils
+
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -101,8 +103,11 @@ def f1_score(retrieved_path: str, expected_path: str, label: str, max_results: i
             f_measure(reference, test)
         )
 
+    mean_f1 = statistics.mean(scores)
+    utils.write_to_csv(
+        f"./avalia/f1-score_{label}.csv", ["label", "f1_score"], [(label, mean_f1)])
     logging.info(
-        "EVALUATION - %s's F1-Score: %.02f", label, statistics.mean(scores)
+        "EVALUATION - %s's F1-Score: %.02f", label, mean_f1
     )
 
 
@@ -119,6 +124,8 @@ def precision_at_n(retrieved_path: str, expected_path: str, n: int, label: str) 
         test = set(map(lambda x: x["Document"], retrieved[query][:lim]))
         precisions[query] = precision(reference, test)
 
+    utils.write_to_csv(f"./avalia/p@{n}_{label}.csv", ["label", "query", "precision"], [
+                       (label, query, p)for query, p in precisions.items()])
     for query, p in precisions.items():
         logging.info(
             "EVALUATION - %s's P@%d Q%d: %.02f", label, n, query, p
@@ -182,7 +189,6 @@ def r_precision_histogram(retrieved_paths: List[str], expected_paths: List[str],
         [0] * len(r_precision_total.keys()),
         "k--"
     )
-    # plt.xlabel()
     plt.legend()
     logging.info("EVALUATION - Plotted")
 
@@ -210,6 +216,8 @@ def mean_average_precision(retrieved_path: str, expected_path: str, max_n: int, 
         mean_precisions.append(statistics.mean(p))
 
     m = statistics.mean(mean_precisions)
+    utils.write_to_csv(
+        f"./avalia/map_{label}.csv", ["label", "map"], [(label, m)])
     logging.info(
         "EVALUATION - %s's MAP: %.02f", label, m
     )
@@ -237,7 +245,8 @@ def mean_reciprocal_rank(retrieved_path: str, expected_path: str, max_k: int, ma
                 break
 
     mrr = statistics.mean(reciprocal_ranks)
-
+    utils.write_to_csv(
+        f"./avalia/mrr_{label}.csv", ["label", "mrr"], [(label, mrr)])
     logging.info(
         "EVALUATION - %s's MRR: %.02f", label, mrr
     )
@@ -278,14 +287,17 @@ def discounted_cumulative_gain(retrieved_path: str, expected_path: str, max_n: i
                 if i == 0:
                     dcg_1 = 0
 
-    mean_dcg = []
-    for dcg in dcgs.values():
-        mean_dcg.append(statistics.mean(dcg))
+    mean_dcg = {}
+    for query, dcg in dcgs.items():
+        mean_dcg[query] = statistics.mean(dcg)
 
-    logging.info(
-        "EVALUATION - %s's DCG: [%s]", label, ", ".join(
-            map(lambda x: str(round(x, 2)), mean_dcg))
-    )
+    utils.write_to_csv(
+        f"./avalia/dcg-mean_{label}.csv", ["label", "query", "dcg"], [(label, query, dcg) for query, dcg in mean_dcg.items()])
+
+    for query, mdcg in mean_dcg.items():
+        logging.info(
+            "EVALUATION - %s's DCG Q%.02f: %s", label, query, mdcg
+        )
 
     return mean_dcg
 
@@ -318,6 +330,10 @@ def normalized_dicounted_comulative_gain(retrieved_path: str, expected_path: str
             else:
                 dcg += __calculate_discount(0, i + 1)
         ndcgs[query] = dcg/idcg
+
+    utils.write_to_csv(
+        f"./avalia/ndcg_{label}.csv", ["label", "query", "ndcg"], [(label, query, ndcg) for query, ndcg in ndcgs.items()])
+
     for query, ndcg in ndcgs.items():
         logging.info(
             "EVALUATION - %s's nDCG Q%d: %.02f", label, query, ndcg

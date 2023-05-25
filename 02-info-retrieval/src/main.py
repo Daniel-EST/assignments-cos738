@@ -131,7 +131,7 @@ def main(**kwargs) -> None:
             STEEMER_retrieved_path, STEEMER_expected_path, "STEEMER", "blue"
         )
         plt.legend()
-        plt.show()
+        plt.savefig("./avalia/11pontos.jpeg")
         plt.clf()
 
         evaluate.f1_score(NOSTEEMER_retrieved_path, NOSTEEMER_expected_path,
@@ -155,7 +155,7 @@ def main(**kwargs) -> None:
             max_results,
             ["NOSTEEMER", "STEEMER"]
         )
-        plt.show()
+        plt.savefig("./avalia/histograma.jpeg")
         plt.clf()
 
         evaluate.mean_average_precision(
